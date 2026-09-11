@@ -67,10 +67,29 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_597981DB9B7D402DA74039C073EA849F }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_A18A369627E64CF8B73FA5338CB93039 }}
 
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App (attempt 1)
+        id: deploy-to-webapp-attempt-1
         uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
+        continue-on-error: true
         with:
           app-name: 'mithun-weather-service'
           slot-name: 'Production'
+          package: .
+
+      - name: Wait before retry after transient restart
+        if: steps.deploy-to-webapp-attempt-1.outcome == 'failure'
+        run: sleep 30
+
+      - name: Deploy to Azure Web App (retry)
+        id: deploy-to-webapp-attempt-2
+        if: steps.deploy-to-webapp-attempt-1.outcome == 'failure'
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'mithun-weather-service'
+          slot-name: 'Production'
+          package: .
+
+      - name: Fail if deployment did not succeed
+        if: steps.deploy-to-webapp-attempt-1.outcome == 'failure' && steps.deploy-to-webapp-attempt-2.outcome == 'failure'
+        run: exit 1
           
