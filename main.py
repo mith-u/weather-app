@@ -54,7 +54,7 @@ async def get_weather(
             response = await client.get(
                 weather_url,
                 params=weather_params,
-                timeout=10
+                timeout=15
             )
 
             response.raise_for_status()
