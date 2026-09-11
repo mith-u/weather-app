@@ -1,4 +1,8 @@
 fastapi
 uvicorn
 httpx
+<<<<<<< HEAD
 gunicorn
+=======
+gunicorn
+>>>>>>> 628defd91e29027d107f3d02d5b79d5dbab4ec7d
