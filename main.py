@@ -20,29 +20,26 @@ async def get_weather_data(client, lat, lon):
         "current": "temperature_2m,relative_humidity_2m,weather_code",
     }
 
-    try:
-        response = await client.get(
-            url,
-            params=params,
-            timeout=20
-        )
+    for attempt in range(3):
+        try:
+            response = await client.get(
+                url,
+                params=params,
+                timeout=20
+            )
 
-        response.raise_for_status()
+            response.raise_for_status()
+            return response.json()
 
-        return response.json()
+        except httpx.TimeoutException:
 
-    except httpx.TimeoutException:
-        raise HTTPException(
-            status_code=504,
-            detail="Weather API request timed out"
-        )
+            if attempt == 2:
+                raise HTTPException(
+                    status_code=504,
+                    detail="Weather API request timed out"
+                )
 
-    except httpx.HTTPError:
-        raise HTTPException(
-            status_code=502,
-            detail="Weather API is unavailable"
-        )
-
+            await asyncio.sleep(1)
 
 async def get_location_data(client, lat, lon):
 
@@ -58,30 +55,27 @@ async def get_location_data(client, lat, lon):
         "User-Agent": "weather-service"
     }
 
-    try:
-        response = await client.get(
-            loc_url,
-            params=loc_params,
-            headers=headers,
-            timeout=20
-        )
+    for attempt in range(3):
+        try:
+            response = await client.get(
+                loc_url,
+                params=loc_params,
+                headers=headers,
+                timeout=20
+            )
 
-        response.raise_for_status()
+            response.raise_for_status()
+            return response.json()
 
-        return response.json()
+        except httpx.TimeoutException:
 
-    except httpx.TimeoutException:
-        raise HTTPException(
-            status_code=504,
-            detail="Location API request timed out"
-        )
+            if attempt == 2:
+                raise HTTPException(
+                    status_code=504,
+                    detail="Location API request timed out"
+                )
 
-    except httpx.HTTPError:
-        raise HTTPException(
-            status_code=502,
-            detail="Location API is unavailable"
-        )
-
+            await asyncio.sleep(1)
 
 @app.get("/weather")
 async def get_weather(
